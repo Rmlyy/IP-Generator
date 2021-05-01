@@ -8,6 +8,10 @@ IP generator and checker written in bash. Generate random IPs and scan for ICMP.
     bash gen -h
    Put your classes in format `xxx.xxx` in `classes.txt`
    
+# Simple
+Simple example, no arguments:   
+![Simple](https://media.rmly.dev/606dw.png)
+
 # Help
 Help Example:   
 ![Help](https://media.rmly.dev/lon7m.png)
