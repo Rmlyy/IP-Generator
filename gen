@@ -1,0 +1,139 @@
+#!/bin/bash
+reset="\e[39m"
+green="\e[92m"
+red="\e[91m"
+white="\e[97m"
+gray="\e[37m"
+cyan="\e[96m"
+
+msgPrefix="${gray}[${white}#${gray}]${white}"
+msgPrefixGood="${gray}[${green}+${gray}]${green}"
+msgPrefixBad="${gray}[${red}-${gray}]${red}"
+
+echo -e "${green}"
+echo " ___________   _____                           _                                      ";
+echo "|_   _| ___ \ |  __ \                         | |                                     ";
+echo "  | | | |_/ / | |  \/ ___ _ __   ___ _ __ __ _| |_ ___  _ __                          ";
+echo "  | | |  __/  | | __ / _ \ '_ \ / _ \ '__/ _\` | __/ _ \| '__|                         ";
+echo " _| |_| |     | |_\ \  __/ | | |  __/ | | (_| | || (_) | |                            ";
+echo " \___/\_|      \____/\___|_| |_|\___|_|  \__,_|\__\___/|_|                            ";
+echo "                                                                                      ";
+
+
+function generate() {
+	class=$(shuf -n 1 classes.txt > tempfile_class)
+	range=$(shuf -i 0-255 -n 2 > tempfile_range)
+	ip=$(cat tempfile_class tempfile_range | xargs | tr " " .)
+
+	if test -f "tempfile_count"; then
+		trap canceled INT
+
+		getCount=$(cat tempfile_count)
+		echo -e "${msgPrefix} Generating...${reset}"
+		start=`date +%s`
+
+		for i in `eval echo {0..$getCount}`; do
+
+			class=$(shuf -n 1 classes.txt > tempfile_class)
+			range=$(shuf -i 0-255 -n 2 > tempfile_range)
+			cmd=$(cat tempfile_class tempfile_range | xargs | tr " " . >> ips)
+		done
+
+		end=`date +%s`
+
+		runtime=$((end-start))
+		cleanup
+		if [[ $runtime < 1 ]]; then
+			echo -e "${msgPrefixGood} OK! ${white}Generated ${green}$getCount IPs${white}.${reset}"
+		else
+			if [[ $runtime == 1 ]]; then
+				echo -e "${msgPrefixGood} OK! ${white}Generated ${green}$getCount IPs${white}${reset} ${gray}- ${green}$runtime ${white}second."
+			else
+				if [[ $runtime > 1 ]]; then
+					echo -e "${msgPrefixGood} OK! ${white}Generated ${green}$getCount IPs${white}${reset} ${gray}- ${green}$runtime ${white}seconds."
+				fi
+			fi
+		fi
+		echo -e "${msgPrefixGood} ${white}Saved to ${green}ips${white}.${reset}"; exit
+	else ping
+	fi
+}
+
+function ping() {
+	timeout 0.1 ping $ip &> tempfile_result; check
+}
+
+function check() {
+	if cat tempfile_result | grep -q '64 bytes from'; then
+		echo -e "${msgPrefixGood} Good: ${ip}${reset}"
+		echo $ip >> all
+		if cat tempfile_noexit 2>&1 | grep -q 'yes'; then
+			trap stopped INT
+			generate
+		else
+			echo $ip > good
+			cleanup
+			echo -e "${msgPrefix} Saved to ${green}good${reset}"
+			echo -e "${msgPrefix} Saved to ${green}all${reset}"; exit
+		fi
+	else
+		echo -e "${msgPrefixBad} Bad: ${ip}${reset}"; generate
+	fi
+}
+
+function stopped() {
+	cleanup
+	echo ""
+	echo -e "${msgPrefix} Stopped.${reset}"
+	echo -e "${msgPrefixGood} ${white}Total good IPs: ${green}$(cat all | wc -l)${reset}"
+	echo -e "${msgPrefixGood} ${white}Saved to ${green}all${white}.${reset}"; exit
+}
+
+function canceled() {
+	cleanup
+	echo ""
+	echo -e "${msgPrefixBad} Canceled.${reset}"; exit
+}
+
+function cleanup() {
+	rm -rf tempfile*
+}
+
+function help() {
+	echo -e "${msgPrefix} ${green}IP Generator ${white}Developed by ${green}Rmly ${white}@ ${green}https://rmly.dev${reset}"
+	echo -e "${msgPrefix} ${green}https://github.com/Rmlyy/IP-Generator"
+	echo ""
+	echo -e "${msgPrefix} Flags:${reset}"
+	echo -e "${msgPrefix}  ${green}-no-exit ${gray}> ${white}Don't exit when a good IP is found.${reset}"
+	echo -e "${msgPrefix}  ${green}-no-check <Count> ${gray}> ${white}Generate random unchecked IPs.${reset}"
+	echo -e "${msgPrefix}  ${green}-help | -h ${gray}> ${white}Show this message.${reset}"; exit
+}
+
+
+while test $# -gt 0; do
+  case "$1" in
+    -help|--help|-h|--h)
+      help
+      ;;
+    -no-exit|--no-exit)
+      echo 'yes' > tempfile_noexit; generate
+      ;;
+    -no-check|--no-check)
+      shift
+      if test $# -gt 0; then
+      	re='^[0-9]+$'
+      	if ! [[ $1 =~ $re ]] ; then echo -e "${msgPrefixBad} Not a valid number.${reset}"; exit
+      	fi
+      	echo $1 > tempfile_count; generate
+      else echo -e "${msgPrefixBad} Please specify a number.${reset}"; exit
+      fi
+      shift
+      ;;
+    *)
+      help
+      ;;
+  esac
+done
+
+
+generate
