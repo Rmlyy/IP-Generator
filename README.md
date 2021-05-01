@@ -6,7 +6,7 @@ IP generator and checker written in bash. Generate random IPs and scan for ICMP.
     tar xvf ipgen.tar
     cd ipgen
     bash gen -h
-   Put your classes in format `xx.xx` in `classes.txt`
+   Put your classes in format `xxx.xxx` in `classes.txt`
    
 # Help
 Help Example:   
