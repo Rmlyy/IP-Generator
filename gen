@@ -4,7 +4,6 @@ green="\e[92m"
 red="\e[91m"
 white="\e[97m"
 gray="\e[37m"
-cyan="\e[96m"
 
 msgPrefix="${gray}[${white}#${gray}]${white}"
 msgPrefixGood="${gray}[${green}+${gray}]${green}"
