@@ -2,7 +2,7 @@
 IP generator and checker written in bash. Generate random IPs and scan for ICMP.
     
 # Download & Usage
-    curl -LO https://files.rmly.dev/ipgen.tar   
+    curl -LO https://aur.pw/f/ipgen.tar   
     tar xvf ipgen.tar
     cd ipgen
     bash gen -h
